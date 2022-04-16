@@ -6,12 +6,14 @@
     "test": "test"
   },
   "scripts": {
-    "liquidate": "node index.js"
+    "liquidate": "node index.js",
+    "start": "node main.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@celo/contractkit": "^1.2.5",
+    "csv-writer": "^1.6.0",
     "lodash": "^4.17.21",
     "moment": "^2.29.2",
     "node-fetch": "^2.6.7",

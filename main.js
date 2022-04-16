@@ -29,6 +29,23 @@ function uniqueFunc(arr, uniId){
   return arr.filter((item) => !res.has(item[uniId]) && res.set(item[uniId], 1));
 }
 
+// csv
+function saveBorrowData(data){
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const csvWriter = createCsvWriter({
+  path: 'celo_address.csv',
+  header: [
+    {id: 'borrower', title: 'address'},
+    {id: 'blockTime', title: 'blockTime'},
+  ]
+});
+
+csvWriter
+  .writeRecords(data)
+  .then(()=> console.log('🚗----The CSV file was written successfully'));
+
+}
+
 let borrows = []
 async function getBorrowData(networkName, first=1000, lastBlockTime) {
   let queryWhere
@@ -54,7 +71,7 @@ async function getBorrowData(networkName, first=1000, lastBlockTime) {
     }
     const filterResult = uniqueFunc(result,'borrower')
     borrows = borrows.concat(filterResult)
-     await getBorrowData(networkName, first, lastBlockTime)
+    await getBorrowData(networkName, first, lastBlockTime)
   } else {
     borrows = borrows.concat(result)
     return
@@ -68,6 +85,8 @@ async function subgraph({ networkName }) {
   try {
     console.log('🚗---start🚗',moment().format('hh:mm:ss'))
     await getBorrowData(networkName);
+    await saveBorrowData(borrows)
+
     console.log('👀total data👀',borrows.length)
     console.log('🚗---end🚗',moment().format('hh:mm:ss'))
 
