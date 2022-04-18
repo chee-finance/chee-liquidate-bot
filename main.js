@@ -7,6 +7,7 @@ const SUBGRAPH_URL = {
   CELO: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-alfajores',
   BSC: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-bsc0',
   METER: '',
+  POLYGON: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-mumbai',
 };
 
 async function fetchSubgraph(networkName, query) {
@@ -30,10 +31,10 @@ function uniqueFunc(arr, uniId){
 }
 
 // csv
-function saveBorrowData(data){
+function saveBorrowData(networkName,data){
   const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
-  path: 'celo_address.csv',
+  path: `${networkName}_address.csv`,
   header: [
     {id: 'borrower', title: 'address'},
     {id: 'blockTime', title: 'blockTime'},
@@ -46,7 +47,12 @@ csvWriter
 
 }
 
-let borrows = []
+let borrowsData = {
+"CELO":[],
+"BSC":[],
+"METER":[],
+'POLYGON':[]
+}
 async function getBorrowData(networkName, first=1000, lastBlockTime) {
   let queryWhere
   if (lastBlockTime) {
@@ -66,14 +72,14 @@ async function getBorrowData(networkName, first=1000, lastBlockTime) {
     lastBlockTime = _.last(result).blockTime
     let removed = _.remove(result, (b) => b.blockTime === lastBlockTime)
     if (result.length === 0) {
-      borrows = borrows.concat(removed)
+      borrowsData[networkName] = borrowsData[networkName].concat(removed)
       return
     }
     const filterResult = uniqueFunc(result,'borrower')
-    borrows = borrows.concat(filterResult)
+    borrowsData[networkName] = borrowsData[networkName].concat(filterResult)
     await getBorrowData(networkName, first, lastBlockTime)
   } else {
-    borrows = borrows.concat(result)
+    borrowsData[networkName] = borrowsData[networkName].concat(result)
     return
   }
 }
@@ -85,9 +91,9 @@ async function subgraph({ networkName }) {
   try {
     console.log('🚗---start🚗',moment().format('hh:mm:ss'))
     await getBorrowData(networkName);
-    await saveBorrowData(borrows)
+    await saveBorrowData(networkName,borrowsData[networkName])
 
-    console.log('👀total data👀',borrows.length)
+    console.log(`👀--${networkName}--total data👀`,borrowsData[networkName].length)
     console.log('🚗---end🚗',moment().format('hh:mm:ss'))
 
   } catch (error) {
@@ -99,7 +105,8 @@ async function subgraph({ networkName }) {
     data: result,
   };
 }
-
-subgraph({
-  networkName: 'CELO'
+['CELO','BSC','METER','POLYGON'].map(item=>{
+  subgraph({
+    networkName: item
+  })
 })
