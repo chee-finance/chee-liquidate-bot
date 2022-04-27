@@ -1,51 +1,61 @@
 const csv = require('csv-parser');
 const fs = require('fs');
 const { COMPTROLLER,comptrollerAbi,RPCURLS,CONTRACT_CBEP_ABI } = require('./constants')
-const Web3 = require('web3')
+const Web3 = require('web3');
+const results = {
+  "CELO":[],
+  "BSC":[],
+  "METER":[],
+  'POLYGON':[]
+};
 
-
-
-async function ifLiquidity( networkName, Borrower ) {
-  const web3 = new Web3(RPCURLS[networkName])
+async function ifLiquidity(web3,networkName, Borrower,index ) {
   const comptroller = new web3.eth.Contract(comptrollerAbi, COMPTROLLER[networkName]);
   try{
     const result = await comptroller.methods.getAccountLiquidity(Borrower).call();
     const {0: error, 1: liquidity, 2: shortfall} = result;
     if(shortfall>0){
-      console.log(`🚗--LiquidityAddress--`,Borrower)
-      liquidityData(networkName,Borrower)
+      // console.log(`🚗--LiquidityAddress--`,Borrower)
+      await liquidityData(web3,networkName,Borrower)
     }
   }catch(e){
-    console.log('👀ifLiquidity error👀',e)
+    console.log(`👀ifLiquidity error${index}👀`,e)
   }
 }
 
 // liquidity
-async function liquidityData(networkName, Borrower) {
-  const web3 = new Web3(RPCURLS[networkName])
+let borrowsData = {
+  "CELO":[],
+  "BSC":[],
+  "METER":[],
+  'POLYGON':[]
+  }
+async function liquidityData(web3,networkName, Borrower) {
+
   const comptroller = new web3.eth.Contract(comptrollerAbi, COMPTROLLER[networkName]);
   try{
     const markets = await comptroller.methods.getAssetsIn(Borrower).call();
-    console.log(`🚗--LiquidityAddressMarkets--`,markets)
+    //  console.log(`🚗--LiquidityAddressMarkets--`,markets)
     let addressSituation = []
 
     await Promise.all(
       markets.map(async item => {
-        res =  await getSnapshot(networkName,item,Borrower)
+        res =  await getSnapshot(web3,item,Borrower)
         if (res) {
           addressSituation.push(res)
         }
       }),
+      borrowsData[networkName].push(addressSituation)
     )
-    console.log(`🚗--LiquidityAddressMarketsSituation--`,addressSituation)
+    // console.log(`🚗--LiquidityAddressMarketsSituation--`,addressSituation)
+    await saveBorrowData(networkName,borrowsData)
   }catch(e){
     console.log('👀liquidity error👀',e)
   }
 }
 
 // Snapshot
-async function getSnapshot(networkName, cToken,Borrower){
-  const web3 = new Web3(RPCURLS[networkName])
+async function getSnapshot(web3,cToken,Borrower){
   const comptroller = new web3.eth.Contract(CONTRACT_CBEP_ABI, cToken);
   try{
     let total = {}
@@ -59,7 +69,6 @@ async function getSnapshot(networkName, cToken,Borrower){
       cToken,
       Borrower
     }
-    console.log('total',total)
     return total
   }catch(e){
     console.log('👀getSnapshot error👀',e)
@@ -67,18 +76,75 @@ async function getSnapshot(networkName, cToken,Borrower){
 }
 
 
+function saveBorrowData(net,data){
+  const result = data[net].flat(Infinity)
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+  const csvWriter = createCsvWriter({
+    path: `${net}_liquidity.csv`,
+    header: [
+      {id: 'save', title: 'save'},
+      {id: 'borrow', title: 'borrow'},
+      {id: 'cToken', title: 'cToken'},
+      {id: 'Borrower', title: 'borrower'},
+    ]
+  });
+  
+  csvWriter
+    .writeRecords(result)
+    .then(()=> console.log('🚗----The CSV file was written successfully'));
+}
+
 function getData(networkName){
+  const web3 = new Web3(RPCURLS[networkName])
   fs.createReadStream(`${networkName}_address.csv`)
   .pipe(csv())
   .on('data', (row) => {
-    // console.log(row);
-    ifLiquidity(networkName,row.address)
+    results[networkName].push(row)
   })
-  .on('end', () => {
-    console.log('CSV file successfully processed');
+  .on('end', async() => {
+    const dataLength = results[networkName].length
+    if(dataLength<1000){
+      await Promise.all(
+        results[networkName].map(async (item,index) => {
+          res =  await ifLiquidity(web3,networkName,item.address,index)
+        }),
+      )
+    } else {
+      const getCount = Math.ceil(dataLength/1000)
+      for (let i= 0;i<getCount;i++) {
+        const start = i *1000
+        const end = start+1000
+        await Promise.all(
+          results[networkName].slice(start,end).map(async (item,index) => {
+            res =  await ifLiquidity(web3,networkName,item.address,index)
+          })
+        )
+
+      }
+    }
   });
 }
 
-// getData('BSC')
 
-ifLiquidity('BSC','0xd59f470c6f647a447031574696d8c27b9b6cc776')
+async function mainFunc( networkName ) {
+  let result = {
+    status: false,
+  };
+  try {
+    await getData(networkName)
+
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log(`👀[mainFunc.js] Error👀: ${error.message}`);
+  }
+  return {
+    status: 200,
+    data: result,
+  };
+}
+ const arr = ['BSC','POLYGON','CELO']
+
+ arr.map(item=>{
+  mainFunc(item)
+})
+
