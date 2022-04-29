@@ -1,6 +1,6 @@
 const csv = require('csv-parser');
 const fs = require('fs');
-const { COMPTROLLER,comptrollerAbi,RPCURLS,CONTRACT_CBEP_ABI } = require('./constants')
+const { COMPTROLLER,comptrollerAbi,RPCURLS,CONTRACT_CBEP_ABI,C_TOKEN_NAME } = require('./constants')
 const Web3 = require('web3');
 const results = {
   "CELO":[],
@@ -63,11 +63,13 @@ async function getSnapshot(web3,cToken,Borrower){
     const {0: error, 1: cTokenBalance, 2: borrowBalance,3:exchangeRate} = shots;
     const save = (cTokenBalance / 1e18) * (exchangeRate / 1e18);
     const borrow = (borrowBalance / 1e18);
+    const name = C_TOKEN_NAME[cToken]
     total = {
       save,
       borrow,
       cToken,
-      Borrower
+      Borrower,
+      name
     }
     return total
   }catch(e){
@@ -86,6 +88,7 @@ function saveBorrowData(net,data){
       {id: 'borrow', title: 'borrow'},
       {id: 'cToken', title: 'cToken'},
       {id: 'Borrower', title: 'borrower'},
+      {id: 'name', title: 'name'},
     ]
   });
   
