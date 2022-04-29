@@ -7,8 +7,7 @@
   },
   "scripts": {
     "liquidate": "node index.js",
-    "start": "node main.js",
-    "reliquidate": "node getAccountLiquidity.js"
+    "start": "node app.js"
   },
   "author": "",
   "license": "ISC",

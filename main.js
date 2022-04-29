@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const fetch = require('node-fetch');
-const moment = require('moment')
+const moment = require('moment');
+const { modules } = require('web3');
 
 
 const SUBGRAPH_URL = {
@@ -66,7 +67,7 @@ async function getBorrowData(networkName, first=1000, lastBlockTime) {
       }
     }
   `;
-  console.log('🚗----getBorrowData time',moment().format('hh:mm:ss'))
+  // console.log('🚗----getBorrowData time',moment().format('hh:mm:ss'))
   let result = (await fetchSubgraph(networkName, query)).borrowEvents
   if (result.length > 0) {
     lastBlockTime = _.last(result).blockTime
@@ -105,8 +106,7 @@ async function subgraph({ networkName }) {
     data: result,
   };
 }
-['CELO','BSC','METER','POLYGON'].map(item=>{
-  subgraph({
-    networkName: item
-  })
-})
+
+module.exports={
+  subgraph
+}

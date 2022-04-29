@@ -2,6 +2,8 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const { COMPTROLLER,comptrollerAbi,RPCURLS,CONTRACT_CBEP_ABI,C_TOKEN_NAME } = require('./constants')
 const Web3 = require('web3');
+const {subgraph} = require('./main.js')
+const moment = require('moment');
 const results = {
   "CELO":[],
   "BSC":[],
@@ -9,6 +11,12 @@ const results = {
   'POLYGON':[]
 };
 
+let errorData = {
+  "CELO":[],
+  "BSC":[],
+  "METER":[],
+  'POLYGON':[]
+}
 async function ifLiquidity(web3,networkName, Borrower,index ) {
   const comptroller = new web3.eth.Contract(comptrollerAbi, COMPTROLLER[networkName]);
   try{
@@ -18,8 +26,16 @@ async function ifLiquidity(web3,networkName, Borrower,index ) {
       // console.log(`🚗--LiquidityAddress--`,Borrower)
       await liquidityData(web3,networkName,Borrower)
     }
+    if(errorData[networkName].indexOf(Borrower)!==-1){
+      errorData[networkName].push(Borrower)
+    } 
   }catch(e){
-    console.log(`👀ifLiquidity error${index}👀`,e)
+    console.log(`👀ifLiquidity error${Borrower}👀`,e)
+    if(errorData[networkName].indexOf(Borrower)===-1){
+      errorData[networkName].push(Borrower)
+      console.log('errorData',errorData)
+    } 
+
   }
 }
 
@@ -30,12 +46,13 @@ let borrowsData = {
   "METER":[],
   'POLYGON':[]
   }
+
+
 async function liquidityData(web3,networkName, Borrower) {
 
   const comptroller = new web3.eth.Contract(comptrollerAbi, COMPTROLLER[networkName]);
   try{
     const markets = await comptroller.methods.getAssetsIn(Borrower).call();
-    //  console.log(`🚗--LiquidityAddressMarkets--`,markets)
     let addressSituation = []
 
     await Promise.all(
@@ -47,10 +64,10 @@ async function liquidityData(web3,networkName, Borrower) {
       }),
       borrowsData[networkName].push(addressSituation)
     )
-    // console.log(`🚗--LiquidityAddressMarketsSituation--`,addressSituation)
-    await saveBorrowData(networkName,borrowsData)
   }catch(e){
-    console.log('👀liquidity error👀',e)
+    console.log(`👀liquidity error👀${Borrower}`,e)
+    errorData[networkName].push(Borrower)
+    console.log('errorData',errorData)
   }
 }
 
@@ -74,6 +91,8 @@ async function getSnapshot(web3,cToken,Borrower){
     return total
   }catch(e){
     console.log('👀getSnapshot error👀',e)
+    errorData[networkName].push(Borrower)
+    console.log('errorData',errorData)
   }
 }
 
@@ -106,17 +125,17 @@ function getData(networkName){
   })
   .on('end', async() => {
     const dataLength = results[networkName].length
-    if(dataLength<1000){
+    if(dataLength<20){
       await Promise.all(
         results[networkName].map(async (item,index) => {
           res =  await ifLiquidity(web3,networkName,item.address,index)
         }),
       )
     } else {
-      const getCount = Math.ceil(dataLength/1000)
+      const getCount = Math.ceil(dataLength/20)
       for (let i= 0;i<getCount;i++) {
-        const start = i *1000
-        const end = start+1000
+        const start = i *20
+        const end = start+20
         await Promise.all(
           results[networkName].slice(start,end).map(async (item,index) => {
             res =  await ifLiquidity(web3,networkName,item.address,index)
@@ -134,7 +153,7 @@ async function mainFunc( networkName ) {
     status: false,
   };
   try {
-    await getData(networkName)
+    getData(networkName)
 
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -145,9 +164,34 @@ async function mainFunc( networkName ) {
     data: result,
   };
 }
- const arr = ['BSC','POLYGON','CELO']
 
- arr.map(item=>{
-  mainFunc(item)
-})
+// ['CELO','BSC','METER','POLYGON'].map(item=>{
+//   console.log('🚗---Step1:get Address',moment().format('hh:mm:ss'))
+//   subgraph({
+//     networkName: item
+//   })
+// })
+
+const arr = ['BSC','POLYGON','CELO']
+setTimeout(()=>{
+  console.log('🚗---Step2:get all Info',moment().format('hh:mm:ss'))
+  arr.map(item=>{
+    mainFunc(item)
+  })
+},0)
+
+setTimeout(()=>{
+  console.log('🚗---Step3:save data',moment().format('hh:mm:ss'))
+  console.log('errorData',errorData)
+   arr.map(item=>{
+    saveBorrowData(item,borrowsData)
+  })
+},3000*60)
+
+
+
+
+
+
+
 
