@@ -90,6 +90,12 @@ async function subgraph({ networkName }) {
     status: false,
   };
   try {
+    borrowsData = {
+      "CELO":[],
+      "BSC":[],
+      "METER":[],
+      'POLYGON':[]
+      }
     console.log('🚗---start🚗',moment().format('hh:mm:ss'))
     await getBorrowData(networkName);
     await saveBorrowData(networkName,borrowsData[networkName])

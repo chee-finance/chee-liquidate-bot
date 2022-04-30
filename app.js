@@ -4,7 +4,9 @@ const { COMPTROLLER,comptrollerAbi,RPCURLS,CONTRACT_CBEP_ABI,C_TOKEN_NAME } = re
 const Web3 = require('web3');
 const {subgraph} = require('./main.js')
 const moment = require('moment');
-const results = {
+const schedule = require('node-schedule');
+
+let results = {
   "CELO":[],
   "BSC":[],
   "METER":[],
@@ -165,33 +167,46 @@ async function mainFunc( networkName ) {
   };
 }
 
-// ['CELO','BSC','METER','POLYGON'].map(item=>{
-//   console.log('🚗---Step1:get Address',moment().format('hh:mm:ss'))
-//   subgraph({
-//     networkName: item
-//   })
-// })
 
-const arr = ['BSC','POLYGON','CELO']
-setTimeout(()=>{
-  console.log('🚗---Step2:get all Info',moment().format('hh:mm:ss'))
-  arr.map(item=>{
-    mainFunc(item)
+function task(){
+  ['CELO','BSC','METER','POLYGON'].map(item=>{
+    console.log('🚗---Step1:get Address',moment().format('hh:mm:ss'))
+    subgraph({
+      networkName: item
+    }) 
   })
-},0)
+  const arr = ['BSC','POLYGON','CELO']
+  setTimeout(()=>{
+    console.log('🚗---Step2:get all Info',moment().format('hh:mm:ss'))
+    arr.map(item=>{
+      mainFunc(item)
+    })
+  },2000*60)
 
-setTimeout(()=>{
-  console.log('🚗---Step3:save data',moment().format('hh:mm:ss'))
-  console.log('errorData',errorData)
-   arr.map(item=>{
-    saveBorrowData(item,borrowsData)
-  })
-},3000*60)
+  setTimeout(()=>{
+    console.log('🚗---Step3:save data',moment().format('hh:mm:ss'))
+    console.log('errorData',errorData)
+     arr.map(item=>{
+      saveBorrowData(item,borrowsData)
+    })
+  },5000*60)
+}
+task()
 
-
-
-
-
-
-
-
+setInterval(()=>{
+  task()
+  // 初始化数据
+  results = {
+    "CELO":[],
+    "BSC":[],
+    "METER":[],
+    'POLYGON':[]
+  };
+  
+  errorData = {
+    "CELO":[],
+    "BSC":[],
+    "METER":[],
+    'POLYGON':[]
+  }
+},10000*60)
