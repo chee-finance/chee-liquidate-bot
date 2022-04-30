@@ -32,7 +32,7 @@ async function ifLiquidity(web3,networkName, Borrower,index ) {
       errorData[networkName].push(Borrower)
     } 
   }catch(e){
-    console.log(`👀ifLiquidity error${Borrower}👀`,e)
+    // console.log(`👀ifLiquidity error${Borrower}👀`,e)
     if(errorData[networkName].indexOf(Borrower)===-1){
       errorData[networkName].push(Borrower)
       console.log('errorData',errorData)
@@ -67,7 +67,7 @@ async function liquidityData(web3,networkName, Borrower) {
       borrowsData[networkName].push(addressSituation)
     )
   }catch(e){
-    console.log(`👀liquidity error👀${Borrower}`,e)
+    // console.log(`👀liquidity error👀${Borrower}`,e)
     errorData[networkName].push(Borrower)
     console.log('errorData',errorData)
   }
@@ -92,7 +92,7 @@ async function getSnapshot(web3,cToken,Borrower){
     }
     return total
   }catch(e){
-    console.log('👀getSnapshot error👀',e)
+    // console.log('👀getSnapshot error👀',e)
     errorData[networkName].push(Borrower)
     console.log('errorData',errorData)
   }
