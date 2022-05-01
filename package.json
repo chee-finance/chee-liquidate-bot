@@ -20,5 +20,9 @@
     "node-fetch": "^2.6.7",
     "node-schedule": "^2.1.0",
     "web3": "1.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.14.0",
+    "eslint-config-standard": "^17.0.0"
   }
 }
