@@ -1,60 +1,58 @@
 const _ = require('lodash')
-const fetch = require('node-fetch');
-const moment = require('moment');
-const { modules } = require('web3');
-
+const fetch = require('node-fetch')
+const moment = require('moment')
+// const { modules } = require('web3')
 
 const SUBGRAPH_URL = {
   CELO: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-alfajores',
   BSC: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-bsc0',
   METER: '',
-  POLYGON: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-mumbai',
-};
+  POLYGON: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-mumbai'
+}
 
-async function fetchSubgraph(networkName, query) {
+async function fetchSubgraph (networkName, query) {
   const response = await fetch(SUBGRAPH_URL[networkName], {
     method: 'POST',
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      query,
-    }),
-  });
-  const { data } = await response.json();
-  return data;
+      query
+    })
+  })
+  const { data } = await response.json()
+  return data
 }
 
-function uniqueFunc(arr, uniId){
-  const res = new Map();
-  return arr.filter((item) => !res.has(item[uniId]) && res.set(item[uniId], 1));
+function uniqueFunc (arr, uniId) {
+  const res = new Map()
+  return arr.filter((item) => !res.has(item[uniId]) && res.set(item[uniId], 1))
 }
 
 // csv
-function saveBorrowData(networkName,data){
-  const createCsvWriter = require('csv-writer').createObjectCsvWriter;
-const csvWriter = createCsvWriter({
-  path: `${networkName}_address.csv`,
-  header: [
-    {id: 'borrower', title: 'address'},
-    {id: 'blockTime', title: 'blockTime'},
-  ]
-});
+function saveBorrowData (networkName, data) {
+  const createCsvWriter = require('csv-writer').createObjectCsvWriter
+  const csvWriter = createCsvWriter({
+    path: `${networkName}_address.csv`,
+    header: [
+      { id: 'borrower', title: 'address' },
+      { id: 'blockTime', title: 'blockTime' }
+    ]
+  })
 
-csvWriter
-  .writeRecords(data)
-  .then(()=> console.log('🚗----The CSV file was written successfully'));
-
+  csvWriter
+    .writeRecords(data)
+    .then(() => console.log('🚗----The CSV file was written successfully'))
 }
 
 let borrowsData = {
-"CELO":[],
-"BSC":[],
-"METER":[],
-'POLYGON':[]
+  CELO: [],
+  BSC: [],
+  METER: [],
+  POLYGON: []
 }
-async function getBorrowData(networkName, first=1000, lastBlockTime) {
+async function getBorrowData (networkName, first = 1000, lastBlockTime) {
   let queryWhere
   if (lastBlockTime) {
     queryWhere = `, where: { blockTime_lte: ${lastBlockTime} }`
@@ -66,53 +64,51 @@ async function getBorrowData(networkName, first=1000, lastBlockTime) {
         blockTime
       }
     }
-  `;
+  `
   // console.log('🚗----getBorrowData time',moment().format('hh:mm:ss'))
-  let result = (await fetchSubgraph(networkName, query)).borrowEvents
+  const result = (await fetchSubgraph(networkName, query)).borrowEvents
   if (result.length > 0) {
     lastBlockTime = _.last(result).blockTime
-    let removed = _.remove(result, (b) => b.blockTime === lastBlockTime)
+    const removed = _.remove(result, (b) => b.blockTime === lastBlockTime)
     if (result.length === 0) {
       borrowsData[networkName] = borrowsData[networkName].concat(removed)
       return
     }
-    const filterResult = uniqueFunc(result,'borrower')
+    const filterResult = uniqueFunc(result, 'borrower')
     borrowsData[networkName] = borrowsData[networkName].concat(filterResult)
     await getBorrowData(networkName, first, lastBlockTime)
   } else {
     borrowsData[networkName] = borrowsData[networkName].concat(result)
-    return
   }
 }
 
-async function subgraph({ networkName }) {
-  let result = {
-    status: false,
-  };
+async function subgraph ({ networkName }) {
+  const result = {
+    status: false
+  }
   try {
     borrowsData = {
-      "CELO":[],
-      "BSC":[],
-      "METER":[],
-      'POLYGON':[]
-      }
-    console.log('🚗---start🚗',moment().format('hh:mm:ss'))
-    await getBorrowData(networkName);
-    await saveBorrowData(networkName,borrowsData[networkName])
+      CELO: [],
+      BSC: [],
+      METER: [],
+      POLYGON: []
+    }
+    console.log('🚗---start🚗', moment().format('hh:mm:ss'))
+    await getBorrowData(networkName)
+    await saveBorrowData(networkName, borrowsData[networkName])
 
-    console.log(`👀--${networkName}--total data👀`,borrowsData[networkName].length)
-    console.log('🚗---end🚗',moment().format('hh:mm:ss'))
-
+    console.log(`👀--${networkName}--total data👀`, borrowsData[networkName].length)
+    console.log('🚗---end🚗', moment().format('hh:mm:ss'))
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.log(`👀[subgraph.js] Error👀: ${error.message}`);
+    console.log(`👀[subgraph.js] Error👀: ${error.message}`)
   }
   return {
     status: 200,
-    data: result,
-  };
+    data: result
+  }
 }
 
-module.exports={
+module.exports = {
   subgraph
 }
