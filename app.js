@@ -40,7 +40,7 @@ async function ifLiquidity (web3, networkName, Borrower) {
 }
 
 // liquidity
-const borrowsData = {
+let borrowsData = {
   CELO: [],
   BSC: [],
   METER: [],
@@ -181,12 +181,33 @@ function task () {
       saveBorrowData(item, borrowsData)
     })
   }, 5000 * 60)
+
+  // delFile
+  setTimeout(() => {
+    arr.forEach(item => {
+      fs.access(`${item}_address.csv`, fs.constants.F_OK, (err) => {
+        if (err) {
+          console.error('File does not exist');
+        }
+        else {
+          fs.unlinkSync(`${item}_address.csv`);
+        }
+      })
+      fs.access(`${item}_liquidity.csv`, fs.constants.F_OK, (err) => {
+        if (err) {
+          console.error('File does not exist');
+        }
+        else {
+          fs.unlinkSync(`${item}_liquidity.csv`);
+        }
+      })
+    });
+  }, 9000 * 60)
 }
 task()
 
 setInterval(() => {
-  task()
-  // 初始化数据
+  // init data
   results = {
     CELO: [],
     BSC: [],
@@ -200,4 +221,13 @@ setInterval(() => {
     METER: [],
     POLYGON: []
   }
+
+  borrowsData = {
+    CELO: [],
+    BSC: [],
+    METER: [],
+    POLYGON: []
+  }
+  task()
+
 }, 10000 * 60)
