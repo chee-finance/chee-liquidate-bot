@@ -15,10 +15,12 @@
     "@celo/contractkit": "^1.2.5",
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
+    "dotenv": "^16.0.1",
     "lodash": "^4.17.21",
     "moment": "^2.29.2",
     "node-fetch": "^2.6.7",
     "node-schedule": "^2.1.0",
+    "ssh2-connect-mysql": "^1.0.2",
     "web3": "1.2.1"
   },
   "devDependencies": {

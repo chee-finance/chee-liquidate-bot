@@ -4,7 +4,7 @@ const { COMPTROLLER, comptrollerAbi, RPCURLS, CONTRACT_CBEP_ABI, C_TOKEN_NAME } 
 const Web3 = require('web3')
 const { subgraph } = require('./main.js')
 const moment = require('moment')
-
+const getDbData = require('./db')
 let results = {
   CELO: [],
   BSC: [],
@@ -94,8 +94,8 @@ async function getSnapshot (web3, cToken, Borrower, networkName) {
   }
 }
 
-function saveBorrowData (net, data) {
-  const result = data[net].flat(Infinity)
+async function saveBorrowData (net, data) {
+   const result = data[net].flat(Infinity)
   const createCsvWriter = require('csv-writer').createObjectCsvWriter
   const csvWriter = createCsvWriter({
     path: `${net}_liquidity.csv`,
@@ -111,6 +111,26 @@ function saveBorrowData (net, data) {
   csvWriter
     .writeRecords(result)
     .then(() => console.log('🚗----The CSV file was written successfully'))
+    const values = result.map(
+      (item) => `("${item.save}", "${item.borrow}", "${item.cToken}", "${item.Borrower}","${item.name}","${moment().unix()}")`,
+    )
+    await saveDataToDb({
+        table:`${net}_liquidity`,
+        values: values.join(','),
+    })
+ 
+}
+
+async function saveDataToDb (arg) {
+
+  const sql = `   
+    INSERT INTO
+    ${arg.table}
+    (save, borrow, ctoken, borrower,name,unix)
+    VALUES
+    ${arg.values}
+    `
+   getDbData(sql); 
 }
 
 function getData (networkName) {
@@ -167,6 +187,7 @@ function task () {
     })
   })
   const arr = ['BSC', 'POLYGON', 'CELO']
+
   setTimeout(() => {
     console.log('🚗---Step2:get all Info', moment().format('hh:mm:ss'))
     arr.forEach(item => {
@@ -174,15 +195,27 @@ function task () {
     })
   }, 2000 * 60)
 
+
   setTimeout(() => {
-    console.log('🚗---Step3:save data', moment().format('hh:mm:ss'))
+    console.log('🚗---Step4:del old data', moment().format('hh:mm:ss'))
+    arr.forEach(item => {
+      const delSql = `   
+    delete from
+    ${item}_liquidity
+    `
+   getDbData(delSql); 
+    })
+  }, 4500 * 60)
+
+  setTimeout(() => {
+    console.log('🚗---Step5:save data', moment().format('hh:mm:ss'))
     console.log('errorData', errorData)
     arr.forEach(item => {
       saveBorrowData(item, borrowsData)
     })
   }, 5000 * 60)
 
-  // delFile
+  // // delFile
   setTimeout(() => {
     arr.forEach(item => {
       fs.access(`${item}_address.csv`, fs.constants.F_OK, (err) => {
@@ -202,6 +235,7 @@ function task () {
         }
       })
     });
+
   }, 9000 * 60)
 }
 task()
