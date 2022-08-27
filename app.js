@@ -5,6 +5,7 @@ const Web3 = require('web3')
 const { subgraph } = require('./main.js')
 const moment = require('moment')
 const getDbData = require('./db')
+const  schedule = require('node-schedule')
 let results = {
   CELO: [],
   BSC: [],
@@ -240,28 +241,33 @@ function task () {
 }
 task()
 
-setInterval(() => {
-  // init data
-  results = {
-    CELO: [],
-    BSC: [],
-    METER: [],
-    POLYGON: []
-  }
 
-  errorData = {
-    CELO: [],
-    BSC: [],
-    METER: [],
-    POLYGON: []
-  }
 
-  borrowsData = {
-    CELO: [],
-    BSC: [],
-    METER: [],
-    POLYGON: []
-  }
-  task()
+const  scheduleTask = ()=>{
+  //  12：00:'0 0 0 * * *'
+  schedule.scheduleJob('0 0 0 * * *',()=>{
+    results = {
+      CELO: [],
+      BSC: [],
+      METER: [],
+      POLYGON: []
+    }
+  
+    errorData = {
+      CELO: [],
+      BSC: [],
+      METER: [],
+      POLYGON: []
+    }
+  
+    borrowsData = {
+      CELO: [],
+      BSC: [],
+      METER: [],
+      POLYGON: []
+    }
+    task()
+  })
+}
 
-}, 10000 * 60)
+scheduleTask() 
