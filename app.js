@@ -244,8 +244,8 @@ task()
 
 
 const  scheduleTask = ()=>{
-  //  12：00:'0 0 0 * * *'
-  schedule.scheduleJob('0 0 0 * * *',()=>{
+  //  every hours
+  schedule.scheduleJob('0 0 */1 * * *',()=>{
     results = {
       CELO: [],
       BSC: [],
