@@ -115,10 +115,13 @@ async function saveBorrowData (net, data) {
     const values = result.map(
       (item) => `("${item.save}", "${item.borrow}", "${item.cToken}", "${item.Borrower}","${item.name}","${moment().unix()}")`,
     )
-    await saveDataToDb({
+    if(values.length){
+      await saveDataToDb({
         table:`${net}_liquidity`,
         values: values.join(','),
     })
+    }
+  
  
 }
 

@@ -14,9 +14,9 @@ const COMPTROLLER = {
 
 const RPCURLS = {
   CELO: 'https://alfajores-forno.celo-testnet.org',
-  BSC: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+  BSC: 'https://rpc.ankr.com/bsc_testnet_chapel',
   METER: 'https://rpctest.meter.io/',
-  POLYGON: 'https://rpc-mumbai.maticvigil.com'
+  POLYGON: 'https://rpc-mumbai.maticvigil.com',
 }
 
 const CONTRACT_CBASE_ABI =
