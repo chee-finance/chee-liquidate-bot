@@ -184,13 +184,13 @@ async function mainFunc (networkName) {
 }
 
 function task () {
-  ['CELO', 'BSC', 'METER', 'POLYGON'].forEach(item => {
+  ['CELO', 'BSC', 'METER'].forEach(item => {
     console.log('🚗---Step1:get Address', moment().format('hh:mm:ss'))
     subgraph({
       networkName: item
     })
   })
-  const arr = ['BSC', 'POLYGON', 'CELO']
+  const arr = ['BSC', 'CELO', 'METER']
 
   setTimeout(() => {
     console.log('🚗---Step2:get all Info', moment().format('hh:mm:ss'))

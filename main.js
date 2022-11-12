@@ -1,14 +1,7 @@
 const _ = require('lodash')
 const fetch = require('node-fetch')
 const moment = require('moment')
-// const { modules } = require('web3')
-
-const SUBGRAPH_URL = {
-  CELO: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-alfajores',
-  BSC: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-bsc0',
-  METER: '',
-  POLYGON: 'https://api.thegraph.com/subgraphs/name/cheenicey/chee-subgraph-mumbai'
-}
+const { SUBGRAPH_URL } = require('./constants')
 
 async function fetchSubgraph (networkName, query) {
   const response = await fetch(SUBGRAPH_URL[networkName], {
