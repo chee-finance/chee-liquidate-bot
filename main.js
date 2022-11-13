@@ -2,7 +2,7 @@ const _ = require('lodash')
 const fetch = require('node-fetch')
 const moment = require('moment')
 const { SUBGRAPH_URL } = require('./constants')
-const env = process.env.REACT_APP_AWS_ENV
+const env = process.env.NODE_ENV
 
 async function fetchSubgraph (networkName, query) {
   const response = await fetch(SUBGRAPH_URL[networkName], {

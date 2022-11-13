@@ -6,7 +6,7 @@ const { subgraph } = require('./main.js')
 const moment = require('moment')
 const getDbData = require('./db')
 const  schedule = require('node-schedule')
-const env = process.env.REACT_APP_AWS_ENV
+const env = process.env.NODE_ENV
 let results = {
   CELO: [],
   BSC: [],
@@ -191,7 +191,7 @@ function task () {
       networkName: item
     })
   })
-  const arr = env==='dev' ? ['BSC', 'CELO'] : ['BSC', 'CELO','METER']
+  const arr = env!=='prod' ? ['BSC', 'CELO'] : ['BSC', 'CELO','METER']
 
   setTimeout(() => {
     console.log('🚗---Step2:get all Info', moment().format('hh:mm:ss'))

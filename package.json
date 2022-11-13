@@ -7,8 +7,11 @@
   },
   "scripts": {
     "liquidate": "node index.js",
-    "start": "export REACT_APP_AWS_ENV=dev && node app.js",
-    "start:prod": "export REACT_APP_AWS_ENV=prod && node app.js"
+    "start": "export NODE_ENV=test && node app.js",
+    "start:prod": "export NODE_ENV=prod && node app.js",
+    "tes": "pm2 start ecosystem.config.js --only test-bot --watch",
+    "prod": "pm2 start ecosystem.config.js --only prod-bot --watch"
+
   },
   "author": "",
   "license": "ISC",
