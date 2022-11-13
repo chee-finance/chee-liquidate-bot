@@ -7,7 +7,7 @@
   },
   "scripts": {
     "liquidate": "node index.js",
-    "start": "node app.js",
+    "start": "export REACT_APP_AWS_ENV=dev && node app.js",
     "start:prod": "export REACT_APP_AWS_ENV=prod && node app.js"
   },
   "author": "",

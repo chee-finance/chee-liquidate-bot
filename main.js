@@ -2,6 +2,7 @@ const _ = require('lodash')
 const fetch = require('node-fetch')
 const moment = require('moment')
 const { SUBGRAPH_URL } = require('./constants')
+const env = process.env.REACT_APP_AWS_ENV
 
 async function fetchSubgraph (networkName, query) {
   const response = await fetch(SUBGRAPH_URL[networkName], {
@@ -27,7 +28,7 @@ function uniqueFunc (arr, uniId) {
 function saveBorrowData (networkName, data) {
   const createCsvWriter = require('csv-writer').createObjectCsvWriter
   const csvWriter = createCsvWriter({
-    path: `${networkName}_address.csv`,
+    path: `${networkName}_address_${env}.csv`,
     header: [
       { id: 'borrower', title: 'address' },
       { id: 'blockTime', title: 'blockTime' }

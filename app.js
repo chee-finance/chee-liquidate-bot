@@ -6,6 +6,7 @@ const { subgraph } = require('./main.js')
 const moment = require('moment')
 const getDbData = require('./db')
 const  schedule = require('node-schedule')
+const env = process.env.REACT_APP_AWS_ENV
 let results = {
   CELO: [],
   BSC: [],
@@ -99,7 +100,7 @@ async function saveBorrowData (net, data) {
    const result = data[net].flat(Infinity)
   const createCsvWriter = require('csv-writer').createObjectCsvWriter
   const csvWriter = createCsvWriter({
-    path: `${net}_liquidity.csv`,
+    path: `${net}_liquidity_${env}.csv`,
     header: [
       { id: 'save', title: 'save' },
       { id: 'borrow', title: 'borrow' },
@@ -117,7 +118,7 @@ async function saveBorrowData (net, data) {
     )
     if(values.length){
       await saveDataToDb({
-        table:`${net}_liquidity`,
+        table:`${net}_liquidity_${env}`,
         values: values.join(','),
     })
     }
@@ -139,7 +140,7 @@ async function saveDataToDb (arg) {
 
 function getData (networkName) {
   const web3 = new Web3(RPCURLS[networkName])
-  fs.createReadStream(`${networkName}_address.csv`)
+  fs.createReadStream(`${networkName}_address_${env}.csv`)
     .pipe(csv())
     .on('data', (row) => {
       results[networkName].push(row)
@@ -190,7 +191,7 @@ function task () {
       networkName: item
     })
   })
-  const arr = ['BSC', 'CELO', 'METER']
+  const arr = env==='dev' ? ['BSC', 'CELO'] : ['BSC', 'CELO','METER']
 
   setTimeout(() => {
     console.log('🚗---Step2:get all Info', moment().format('hh:mm:ss'))
@@ -205,7 +206,7 @@ function task () {
     arr.forEach(item => {
       const delSql = `   
     delete from
-    ${item}_liquidity
+    ${item}_liquidity_${env}
     `
    getDbData(delSql); 
     })
@@ -222,20 +223,20 @@ function task () {
   // // delFile
   setTimeout(() => {
     arr.forEach(item => {
-      fs.access(`${item}_address.csv`, fs.constants.F_OK, (err) => {
+      fs.access(`${item}_address_${env}.csv`, fs.constants.F_OK, (err) => {
         if (err) {
           console.error('File does not exist');
         }
         else {
-          fs.unlinkSync(`${item}_address.csv`);
+          fs.unlinkSync(`${item}_address_${env}.csv`);
         }
       })
-      fs.access(`${item}_liquidity.csv`, fs.constants.F_OK, (err) => {
+      fs.access(`${item}_liquidity_${env}.csv`, fs.constants.F_OK, (err) => {
         if (err) {
           console.error('File does not exist');
         }
         else {
-          fs.unlinkSync(`${item}_liquidity.csv`);
+          fs.unlinkSync(`${item}_liquidity_${env}.csv`);
         }
       })
     });
